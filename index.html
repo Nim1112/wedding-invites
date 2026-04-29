@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Invite Generator</title>
+    <style>
+        :root { --gold: #8d754a; --text: #4a4238; }
+        body { font-family: -apple-system, sans-serif; background-color: #f8f5f0; margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; color: var(--text); }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); width: 100%; max-width: 400px; box-sizing: border-box; }
+        h2 { text-align: center; color: var(--gold); margin-top: 0; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: 600; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
+        .radio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .radio-btn { border: 1px solid #ddd; padding: 10px; border-radius: 10px; text-align: center; font-size: 14px; cursor: pointer; transition: 0.2s; }
+        .radio-btn input { display: none; }
+        .radio-btn.selected { background: var(--gold); color: white; border-color: var(--gold); }
+        .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        button { width: 100%; padding: 15px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .btn-download { background: #555; color: white; }
+        .btn-whatsapp { background: #25D366; color: white; }
+        #previewCanvas { width: 100%; border-radius: 10px; margin-top: 20px; border: 1px solid #eee; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Invite Friends</h2>
+    
+    <label>Select One:</label>
+    <div class="radio-grid" id="radioGroup">
+        <label class="radio-btn"><input type="radio" name="sal" value="Mr."> Mr.</label>
+        <label class="radio-btn"><input type="radio" name="sal" value="Ms."> Ms.</label>
+        <label class="radio-btn"><input type="radio" name="sal" value="Mr. and Mrs."> Mr. & Mrs.</label>
+        <label class="radio-btn"><input type="radio" name="sal" value="Family"> Family</label>
+    </div>
+
+    <div class="input-group">
+        <label>Friend's Name:</label>
+        <input type="text" id="gName" placeholder="Enter name">
+    </div>
+
+    <div class="input-group">
+        <label>WhatsApp Number (with country code):</label>
+        <input type="tel" id="pNum" placeholder="94771234567">
+    </div>
+
+    <div class="input-group">
+        <label>Custom Note:</label>
+        <textarea id="msg" rows="2" placeholder="Optional greeting..."></textarea>
+    </div>
+
+    <div class="actions">
+        <button class="btn-download" onclick="processImage(true)">1. Save Image to Phone</button>
+        <button class="btn-whatsapp" onclick="processImage(false)">2. Open WhatsApp Chat</button>
+    </div>
+
+    <canvas id="previewCanvas"></canvas>
+</div>
+
+<script>
+    // Visual Radio Toggle
+    document.querySelectorAll('.radio-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.radio-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        });
+    });
+
+    const canvas = document.getElementById('previewCanvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.src = 'final invite akka d.jpg';
+
+    function processImage(isDownload) {
+        const name = document.getElementById('gName').value;
+        const phone = document.getElementById('pNum').value;
+        const salutation = document.querySelector('input[name="sal"]:checked')?.value;
+
+        if(!name || !salutation) { alert("Fill in name and select type!"); return; }
+
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        ctx.drawImage(img, 0, 0);
+
+        // Name Styling
+        ctx.font = "italic 40px 'Georgia'"; 
+        ctx.fillStyle = "#4a4238";
+        ctx.textAlign = "center";
+        ctx.fillText(name, canvas.width / 2, 518);
+
+        // Strike-through Logic
+        const coords = [
+            { val: "Mr.", x: 260, w: 60 },
+            { val: "Ms.", x: 345, w: 60 },
+            { val: "Mr. and Mrs.", x: 500, w: 180 },
+            { val: "Family", x: 670, w: 100 }
+        ];
+
+        ctx.strokeStyle = "#4a4238";
+        ctx.lineWidth = 3;
+        coords.forEach(c => {
+            if(c.val !== salutation) {
+                ctx.beginPath();
+                ctx.moveTo(c.x - (c.w/2), 452);
+                ctx.lineTo(c.x + (c.w/2), 452);
+                ctx.stroke();
+            }
+        });
+
+        canvas.style.display = "block";
+
+        if(isDownload) {
+            const link = document.createElement('a');
+            link.download = `Invite-${name}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 0.9);
+            link.click();
+        } else {
+            if(!phone) { alert("Enter phone number first"); return; }
+            const text = encodeURIComponent(document.getElementById('msg').value || "You're invited!");
+            window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
+        }
+    }
+</script>
+</body>
+</html>
